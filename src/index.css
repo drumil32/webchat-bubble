@@ -17,8 +17,9 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 217 100% 50%;
     --primary-foreground: 210 40% 98%;
+    --primary-glow: 217 100% 65%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -35,6 +36,28 @@ All colors MUST be HSL.
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
+
+    /* Chat-specific design tokens */
+    --chat-primary: 217 100% 50%;
+    --chat-primary-hover: 217 100% 45%;
+    --chat-primary-glow: 217 100% 65%;
+    --chat-background: 0 0% 98%;
+    --chat-user-message: 217 100% 50%;
+    --chat-bot-message: 0 0% 95%;
+    --chat-shadow: 217 25% 25%;
+    
+    /* Gradients */
+    --gradient-chat: linear-gradient(135deg, hsl(var(--chat-primary)), hsl(var(--chat-primary-glow)));
+    --gradient-glow: radial-gradient(circle, hsl(var(--chat-primary-glow) / 0.3) 0%, transparent 70%);
+    
+    /* Shadows */
+    --shadow-chat: 0 8px 32px hsl(var(--chat-shadow) / 0.15);
+    --shadow-message: 0 2px 8px hsl(var(--chat-shadow) / 0.1);
+    --shadow-glow: 0 0 20px hsl(var(--chat-primary-glow) / 0.4);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --radius: 0.5rem;
 
