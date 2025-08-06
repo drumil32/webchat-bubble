@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   id: string;
@@ -36,6 +37,22 @@ export function ChatWidget({ config, onClose }: ChatWidgetProps) {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new messages are added
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end'
+      });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
 
   const sendMessage = async (message: string) => {
     if (!message.trim()) return;
@@ -138,31 +155,60 @@ export function ChatWidget({ config, onClose }: ChatWidgetProps) {
             </div>
 
             {/* Messages */}
-            <ScrollArea className="h-64 p-4">
+            <ScrollArea ref={scrollAreaRef} className="h-64 p-4">
               <div className="space-y-4">
-                {messages.map((message) => (
+                {messages.map((message, index) => (
                   <div
                     key={message.id}
                     className={cn(
-                      'flex animate-fade-in',
+                      'flex transition-all duration-300 ease-out',
+                      'animate-fade-in',
                       message.isUser ? 'justify-end' : 'justify-start'
                     )}
+                    style={{ 
+                      animationDelay: `${index * 50}ms`,
+                      transform: 'translateY(0)'
+                    }}
                   >
                     <div
                       className={cn(
                         'max-w-[80%] px-3 py-2 rounded-lg text-sm shadow-[var(--shadow-message)]',
+                        'transition-all duration-200 hover:shadow-lg',
                         message.isUser
-                          ? 'bg-[hsl(var(--chat-user-message))] text-primary-foreground'
-                          : 'bg-[hsl(var(--chat-bot-message))] text-foreground'
+                          ? 'bg-[hsl(var(--chat-user-message))] text-primary-foreground rounded-br-sm'
+                          : 'bg-[hsl(var(--chat-bot-message))] text-foreground rounded-bl-sm'
                       )}
                     >
-                      {message.content}
+                      {message.isUser ? (
+                        <span>{message.content}</span>
+                      ) : (
+                        <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
+                          <ReactMarkdown
+                            components={{
+                              p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                              code: ({ children }) => (
+                                <code className="bg-muted px-1 py-0.5 rounded text-xs">{children}</code>
+                              ),
+                              pre: ({ children }) => (
+                                <pre className="bg-muted p-2 rounded text-xs overflow-x-auto">{children}</pre>
+                              ),
+                              ul: ({ children }) => <ul className="list-disc list-inside mb-2">{children}</ul>,
+                              ol: ({ children }) => <ol className="list-decimal list-inside mb-2">{children}</ol>,
+                              li: ({ children }) => <li className="mb-1">{children}</li>,
+                              strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                              em: ({ children }) => <em className="italic">{children}</em>,
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
                 {isLoading && (
                   <div className="flex justify-start animate-fade-in">
-                    <div className="bg-[hsl(var(--chat-bot-message))] px-3 py-2 rounded-lg text-sm">
+                    <div className="bg-[hsl(var(--chat-bot-message))] px-3 py-2 rounded-lg rounded-bl-sm text-sm">
                       <div className="flex space-x-1">
                         <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                         <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
@@ -171,6 +217,7 @@ export function ChatWidget({ config, onClose }: ChatWidgetProps) {
                     </div>
                   </div>
                 )}
+                <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
 
@@ -182,14 +229,27 @@ export function ChatWidget({ config, onClose }: ChatWidgetProps) {
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="Type your message..."
                   disabled={isLoading}
-                  className="flex-1"
+                  className="flex-1 transition-all duration-200 focus:ring-2 focus:ring-[hsl(var(--chat-primary))] focus:ring-opacity-20"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit(e);
+                    }
+                  }}
                 />
                 <Button
                   type="submit"
                   disabled={isLoading || !inputValue.trim()}
-                  className="bg-[hsl(var(--chat-primary))] hover:bg-[hsl(var(--chat-primary-hover))] px-3"
+                  className={cn(
+                    "bg-[hsl(var(--chat-primary))] hover:bg-[hsl(var(--chat-primary-hover))] px-3",
+                    "transition-all duration-200 hover:scale-105 active:scale-95",
+                    "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  )}
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className={cn(
+                    "h-4 w-4 transition-transform duration-200",
+                    isLoading && "animate-pulse"
+                  )} />
                 </Button>
               </form>
             </div>
